@@ -49,7 +49,7 @@ function draw() {
       population.naturalSelection();
     }
   }
-}
+}    
 //-----------------------------------------------------------------------------------
 function showBestPlayersForEachGeneration() {
   if (!genPlayerTemp.dead) { //if current gen player is not dead then update it
