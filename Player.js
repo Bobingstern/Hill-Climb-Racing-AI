@@ -12,14 +12,56 @@ class Player {
     this.score = 0;
     this.gen = 0;
 
+    this.world = new b2World(new b2Vec2(0, 50))
+    this.bodies = []
+    this.bodyScales = []
+
+    this.wheels = []
+    this.wheelsScales = []
     this.genomeInputs = 5;
     this.genomeOutputs = 2;
     this.brain = new Genome(this.genomeInputs, this.genomeOutputs);
+
+    //--------
+    //Ground
+    this.bodies.push(makeBox(this.world, b2Body.b2_staticBody, 500, height, width, 100, 1, 0.3, 0.1))
+    this.bodyScales.push([width, 100])
+
+    //main Body
+    this.bodies.push(makeBox(this.world, b2Body.b2_dynamicBody, 500, 200, 100, 50, 1, 0.3, 0.1))
+    this.bodyScales.push([100, 50])
+
+    //Wheel
+    this.wheels.push(makeCircle(this.world, b2Body.b2_dynamicBody, 500, 100, 20, 1, 0.3, 0.1))
+    this.wheelsScales.push(20)
+
+
+
   }
 
   //---------------------------------------------------------------------------------------------------------------------------------------------------------
   show() {
       //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<replace
+      for (var i=0;i<this.bodies.length;i++){
+        push()
+        translate(this.bodies[i].GetPosition().x*SCALE, this.bodies[i].GetPosition().y*SCALE)
+        rectMode(CENTER)
+        rotate(this.bodies[i].GetAngle())
+        rect(0, 0, this.bodyScales[i][0]*2, this.bodyScales[i][1]*2)
+
+        pop()
+      }
+
+      for (var i=0;i<this.wheels.length;i++){
+        push()
+        translate(this.wheels[i].GetPosition().x*SCALE, this.wheels[i].GetPosition().y*SCALE)
+        rotate(this.wheels[i].GetAngle())
+
+        circle(0, 0, this.wheelsScales[i]*2)
+
+        pop()
+      }
+
     }
     //---------------------------------------------------------------------------------------------------------------------------------------------------------
   move() {
@@ -28,6 +70,7 @@ class Player {
     //---------------------------------------------------------------------------------------------------------------------------------------------------------
   update() {
       //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<replace
+      this.world.Step(1/60, 10, 10)
     }
     //----------------------------------------------------------------------------------------------------------------------------------------------------------
 

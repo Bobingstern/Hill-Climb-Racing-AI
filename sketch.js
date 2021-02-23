@@ -1,7 +1,35 @@
 //this is a template to add a NEAT ai to any game
 //note //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<replace
 //this means that there is some information specific to the game to input here
+let b2Vec2 = Box2D.Common.Math.b2Vec2;
+let b2BodyDef = Box2D.Dynamics.b2BodyDef;
+let b2Body = Box2D.Dynamics.b2Body;
+let b2FixtureDef = Box2D.Dynamics.b2FixtureDef;
+let b2Fixture = Box2D.Dynamics.b2Fixture;
+let b2World = Box2D.Dynamics.b2World;
+let b2MassData = Box2D.Collision.Shapes.b2MassData;
+let b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape;
+let b2CircleShape = Box2D.Collision.Shapes.b2CircleShape;
+let b2EdgeChainDef = Box2D.Collision.Shapes.b2EdgeChainDef;
 
+let b2DebugDraw = Box2D.Dynamics.b2DebugDraw;
+let b2StaticBody = Box2D.Dynamics.b2Body.b2_staticBody;
+let b2DynamicBody = Box2D.Dynamics.b2Body.b2_dynamicBody;
+let b2RevoluteJoint = Box2D.Dynamics.Joints.b2RevoluteJoint;
+let b2RevoluteJointDef = Box2D.Dynamics.Joints.b2RevoluteJointDef;
+
+let b2PrismaticJoint = Box2D.Dynamics.Joints.b2PrismaticJoint;
+let b2PrismaticJointDef = Box2D.Dynamics.Joints.b2PrismaticJointDef;
+
+let b2FilterData = Box2D.Dynamics.b2FilterData;
+
+let b2DistanceJoint = Box2D.Dynamics.Joints.b2DistanceJoint;
+let b2DistanceJointDef = Box2D.Dynamics.Joints.b2DistanceJointDef;
+
+let b2WeldJoint = Box2D.Dynamics.Joints.b2WeldJoint;
+let b2WeldJointDef = Box2D.Dynamics.Joints.b2WeldJointDef;
+
+var SCALE = 30
 
 var nextConnectionNo = 1000;
 var population;
@@ -23,12 +51,67 @@ var genPlayerTemp; //player
 var showNothing = false;
 
 
+function makeBox(world, bodyType, x, y, w, h, density, friction, res, mass, isSens) {
+  let fixDef = new b2FixtureDef();
+  fixDef.density = density;
+  fixDef.friction = friction
+  fixDef.restitution = res
+  fixDef.isSensor = isSens
+  // fixDef.mass = mass
+  let bodyDef = new b2BodyDef()
+  bodyDef.type = bodyType
+  bodyDef.position.x = x / SCALE
+  bodyDef.position.y = y / SCALE
+  fixDef.shape = new b2PolygonShape()
+  fixDef.shape.SetAsBox(w / SCALE, h / SCALE)
+  var filtData = new b2FilterData();
+    // filtData.groupIndex = -1;
+
+
+
+  let body = world.CreateBody(bodyDef)
+  body.CreateFixture(fixDef)
+  return body
+}
+
+function makeCircle(world, bodyType, x, y, r, density, friction, res, mass, isSens) {
+
+
+
+
+  let fixDef = new b2FixtureDef();
+  fixDef.density = density;
+  fixDef.friction = friction
+  fixDef.restitution = res
+
+
+  let circle = new b2CircleShape()
+  circle.m_radius = r/SCALE
+
+  let bodyDef = new b2BodyDef()
+  bodyDef.type = bodyType
+  bodyDef.position.x = x / SCALE
+  bodyDef.position.y = y / SCALE
+  fixDef.shape = circle
+
+
+
+
+
+
+
+
+  let body = world.CreateBody(bodyDef)
+  body.CreateFixture(fixDef)
+  return body
+}
+
 //--------------------------------------------------------------------------------------------------------------------------------------------------
 
 function setup() {
   window.canvas = createCanvas(1280, 720);
   //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<replace
-  population = new Population(100);
+  population = new Population(1);
   humanPlayer = new Player();
 }
 //--------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -49,7 +132,7 @@ function draw() {
       population.naturalSelection();
     }
   }
-}    
+}
 //-----------------------------------------------------------------------------------
 function showBestPlayersForEachGeneration() {
   if (!genPlayerTemp.dead) { //if current gen player is not dead then update it
