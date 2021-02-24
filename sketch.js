@@ -50,7 +50,7 @@ var genPlayerTemp; //player
 
 var showNothing = false;
 let offset
-let easing = 0.1
+let easing = 0.05
 let terrain = []
 
 function getBest(){
@@ -71,7 +71,7 @@ function makeTerrain(){
   var dirtBody;
   var grassBody;
 
-  var distance = 20 * canvas.width;
+  var distance = 15 * canvas.width;
   var x = 0;
   var y = 0;
   var smoothness = 50; //a vector every
@@ -79,7 +79,7 @@ function makeTerrain(){
   var steepness = 250;
 
   var grassPositions = [];
-  var steepnessLevel = 100; //from 0 to 200
+  var steepnessLevel = 200; //from 0 to 200
   var estimatedDIfficulty = 0;
   let startingPoint = random(100000);
 
@@ -89,7 +89,7 @@ function makeTerrain(){
         steepnessLevel = map(i, 0, distance, 130, 250);
         // this.steepnessLevel = map(i, 0, this.distance, 200, 200);
 
-        let flatLength = 500;
+        let flatLength = 200;
         let noisedY = noise(startingPoint + (i - flatLength) / (700 - steepnessLevel));
         let maxHeight = 300 + map(steepnessLevel, 0, 200, 0, 350);
         let minHeight = 30;
@@ -105,19 +105,7 @@ function makeTerrain(){
         }
 
         //add grass
-        for (var j = 0; j < 2; j++) {
-          if (random(1) < 0.05) {
-          } else {
-            if (i != 0 && grassPositions[grassPositions.length - 1] != -1 && random(1) < 0.7) {
-              grassPositions.push(floor(random(grassSprites.length)));
-              if (grassPositions[grassPositions.length - 1] == grassPositions[grassPositions.length - 2]) {
-                grassPositions[grassPositions.length - 1] = floor(random(grassSprites.length));
-              }
-            } else {
-              grassPositions.push(-1);
-            }
-          }
-        }
+
 
       }
       console.log(totalDifference);
@@ -220,7 +208,7 @@ function setup() {
   //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<replace
   offset = createVector(0, 0)
   terrain = makeTerrain()
-  population = new Population(10);
+  population = new Population(50);
   humanPlayer = new Player();
 }
 //--------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -276,6 +264,11 @@ function draw() {
 
 
       population.updateAlive();
+      push()
+      fill(0)
+      //translate(population.players[getBest()].bodies[1].oldx+offset.x, population.players[getBest()].bodies[1].GetPosition().y*SCALE)
+
+      pop()
     } else { //all dead
       //genetic algorithm
       population.naturalSelection();
@@ -334,7 +327,7 @@ function drawToScreen() {
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function drawBrain() { //show the brain of whatever genome is currently showing
-  var startX = 0; //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<replace
+  var startX = 50; //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<replace
   var startY = 0;
   var w = 300;
   var h = 300;
@@ -347,7 +340,7 @@ function drawBrain() { //show the brain of whatever genome is currently showing
   } else if (showBestEachGen) {
     genPlayerTemp.brain.drawGenome(startX, startY, w, h);
   } else {
-    population.players[0].brain.drawGenome(startX, startY, w, h);
+    population.players[getBest()].brain.drawGenome(startX, startY, w, h);
   }
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

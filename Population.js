@@ -33,6 +33,9 @@ class Population {
             this.globalBestScore = this.players[i].score;
           }
         }
+        else{
+          this.players[i].ded()
+        }
       }
 
     }
@@ -69,6 +72,12 @@ class Population {
   naturalSelection() {
 
     // this.batchNo = 0;
+
+    for (var i=0;i<this.players.length;i++){
+      this.players[i].world = 0
+    }
+
+
     var previousBest = this.players[0];
     this.speciate(); //seperate the this.players varo this.species
     this.calculateFitness(); //calculate the fitness of each player

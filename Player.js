@@ -12,7 +12,7 @@ class Player {
     this.score = 0;
     this.gen = 0;
 
-    this.world = new b2World(new b2Vec2(0, 50))
+    this.world = new b2World(new b2Vec2(0, 50), true)
     this.bodies = []
     this.bodyScales = []
 
@@ -48,10 +48,12 @@ class Player {
     //Wheel
     this.wheels.push(makeCircle(this.world, b2Body.b2_dynamicBody, 430, 270, 20, 10, 100000000, 0.1))
     this.wheelsScales.push(20)
+    this.wheels[0].SetUserData("wheel")
 
     //Wheel2
     this.wheels.push(makeCircle(this.world, b2Body.b2_dynamicBody, 570, 270, 20, 10, 100000000, 0.1))
     this.wheelsScales.push(20)
+    this.wheels[1].SetUserData("wheel")
 
 
     this.wheels.push(makeCircle(this.world, b2Body.b2_dynamicBody, 500, 100, 20, 10, 100000000, 0.1))
@@ -103,8 +105,8 @@ class Player {
     bobby.localAnchorA.Set(0, -45/SCALE)
     bobby.localAnchorB.Set(0, 15/SCALE)
     bobby.enableLimit = true
-    bobby.upperAngle = radians(45)
-    bobby.lowerAngle = radians(-45)
+    bobby.upperAngle = radians(15)
+    bobby.lowerAngle = radians(-15)
 
     this.joints.push(this.world.CreateJoint(bobby))
 
@@ -126,11 +128,12 @@ class Player {
 
     this.startx = 500
 
-
+    this.oldx = this.startx
 
 
     this.listener = new Box2D.Dynamics.b2ContactListener;
     this.listener.dead = false
+    this.listener.grounded = false
     this.world.SetContactListener(this.listener);
 
     this.listener.BeginContact = function(contact) {
@@ -144,6 +147,16 @@ class Player {
         this.dead = true
 
 
+      }
+
+      if (fixA == "ground" && fixB == "wheel" || fixA == "wheel" && fixB == "ground") {
+
+        this.grounded= true
+
+
+      }
+      else{
+        this.grounded = false
       }
 
 
@@ -221,7 +234,14 @@ class Player {
         rotate(this.wheels[i].GetAngle())
 
         circle(0, 0, this.wheelsScales[i]*2)
+        if (i != 2)[
         line(0, 0, this.wheelsScales[i], 0)
+        ]
+        else{
+          circle(-10, 0, 2)
+          circle(10, 0, 2)
+          line(-5, 0, 5, 0)
+        }
         pop()
       }
 
@@ -240,7 +260,7 @@ class Player {
 
 
 
-
+      //rect(this.bodies[1].GetPosition().x*SCALE+offset.x, this.bodies[1].GetPosition().y*SCALE, 10, 10)
 
 
     }
@@ -262,9 +282,25 @@ class Player {
       ]
 
 
-      if (this.listener.dead || this.lifespan % 5000 == 0){
+      if (this.listener.dead || this.lifespan >= 2000){
         this.dead = true
       }
+
+
+
+      if (this.lifespan % 10 == 0){
+        if ((this.bodies[1].GetPosition().x*SCALE+offset.x) - this.oldx < 20){
+          this.lifespan += 50
+          if ((this.bodies[1].GetPosition().x*SCALE+offset.x) > this.oldx){
+            this.oldx = (this.bodies[1].GetPosition().x*SCALE+offset.x)
+          }
+
+        }
+        else{
+          this.lifespan -= 50
+        }
+      }
+
     }
     //----------------------------------------------------------------------------------------------------------------------------------------------------------
   getPositions(x, numberOfPositions, skip) {
@@ -285,14 +321,13 @@ class Player {
 
   look() {
     this.vision = [];
-      this.vision[0] = this.bodies[1].GetAngle();
+      this.vision[0] = degrees(this.bodies[1].GetAngle());
       while (this.vision[0] < 0) {
         this.vision[0] += 2 * PI;
       }
-      this.vision[0] = (this.vision[0] + PI) % (2 * PI);
-      this.vision[0] = map(this.vision[0], 0, 2 * PI, 0, 1);
+
       this.lastGrounded++;
-      if (this.wheels[0].onGround || this.wheels[1].onGround) {
+      if (this.listener.grounded) {
         this.vision[1] = 1;
         this.lastGrounded = 0;
       } else {
@@ -306,7 +341,7 @@ class Player {
       //
       // this.vision[2] = map(this.car.chassisBody.GetLinearVelocity().x, -17, 17, -1, 1);
       // this.vision[3] = map(this.car.chassisBody.GetLinearVelocity().y, -12, 12, -1, 1);
-      this.vision.push(map(this.bodies[1].GetAngularVelocity(), -4, 4, -1, 1));
+      this.vision.push(map(this.bodies[1].GetAngularVelocity(), -4, 4, -10, 10));
 
       // this.vision[3] = this.car.chassisBody.GetLinearVelocity().y;
       // this.vision[4] = this.car.chassisBody.GetAngularVelocity();
@@ -317,7 +352,7 @@ class Player {
 
       let temp = (this.getPositions(this.bodies[1].GetPosition().x, 2, 5));
       let first = temp[0];
-      this.vision.push(map(constrain(first - this.bodies[1].GetPosition().y - this.bodyScales[1][1] / SCALE, 0, 10), 0, 10, 0, 1));
+      this.vision.push(map(constrain(first - this.bodies[1].GetPosition().y - this.bodyScales[1][1] / SCALE, 0, 10), 0, 10, 0, 20));
 
       for (var i = 1; i < temp.length; i++) {
         temp[i] -= first;
@@ -328,9 +363,47 @@ class Player {
   }
 
 
+
+  ded(){
+
+    this.world.Step(1/60, 10, 10)
+
+    for (var i=0;i<this.joints.length;i++){
+      this.world.DestroyJoint(this.joints[i])
+    }
+
+    for (var i=0;i<this.wheels.length;i++){
+      push()
+      fill(255, 0, 0, 50)
+      noStroke()
+      translate(this.wheels[i].GetPosition().x*SCALE+offset.x, this.wheels[i].GetPosition().y*SCALE)
+      rotate(this.wheels[i].GetAngle())
+
+      circle(0, 0, this.wheelsScales[i]*2)
+      if (i != 2)[
+      line(0, 0, this.wheelsScales[i], 0)
+      ]
+      pop()
+    }
+
+    for (var i=0;i<this.bodies.length;i++){
+      push()
+      fill(255, 0, 0, 50)
+      noStroke()
+      translate(this.bodies[i].GetPosition().x*SCALE+offset.x, this.bodies[i].GetPosition().y*SCALE)
+      rectMode(CENTER)
+      rotate(this.bodies[i].GetAngle())
+      rect(0, 0, this.bodyScales[i][0]*2, this.bodyScales[i][1]*2)
+
+      pop()
+    }
+  }
+
   //---------------------------------------------------------------------------------------------------------------------------------------------------------
   //gets the output of the this.brain then converts them to actions
   think() {
+
+
 
     var max = 0;
     var maxIndex = 0;

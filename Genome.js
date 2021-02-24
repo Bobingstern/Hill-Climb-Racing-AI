@@ -6,6 +6,8 @@ class Genome {
     this.outputs = outputs;
     this.layers = 2;
     this.nextNode = 0;
+    this.ins = []
+    this.outs = []
     // this.biasNode;
     this.network = []; //a list of the this.nodes in the order that they need to be considered in the NN
     //create input this.nodes
@@ -110,7 +112,8 @@ class Genome {
     for (var i = 0; i < this.nodes.length; i++) { //reset all the this.nodes for the next feed forward
       this.nodes[i].inputSum = 0;
     }
-
+    this.outs = outs
+    this.ins = inputValues
     return outs;
   }
 
@@ -456,6 +459,7 @@ class Genome {
     }
 
     //draw connections
+    var triggers = []
     stroke(0);
     strokeWeight(2);
     for (var i = 0; i < this.genes.length; i++) {
@@ -468,13 +472,25 @@ class Genome {
       var to;
       from = nodePoses[nodeNumbers.indexOf(this.genes[i].fromNode.number)];
       to = nodePoses[nodeNumbers.indexOf(this.genes[i].toNode.number)];
+      var ee = 0
       if (this.genes[i].weight > 0) {
+        ee = 0
         stroke(255, 0, 0);
       } else {
         stroke(0, 0, 255);
+        ee = 1
       }
-      strokeWeight(map(abs(this.genes[i].weight), 0, 1, 0, 3));
-      line(from.x, from.y, to.x, to.y);
+
+      if (this.outs[i] > 0.5){
+        strokeWeight(map(abs(this.genes[i].weight), 0, 1, 0, 3));
+        line(from.x, from.y, to.x, to.y);
+        triggers.push([nodeNumbers.indexOf(this.genes[i].toNode.number), ee])
+      }
+      else{
+        stroke(255, 255, 255, map(abs(this.genes[i].weight), 0, 1, 0, 3)*50)
+        strokeWeight(1);
+        line(from.x, from.y, to.x, to.y);
+      }
     }
 
     //draw this.nodes last so they appear ontop of the connection lines
@@ -486,8 +502,20 @@ class Genome {
       textSize(10);
       fill(0);
       textAlign(CENTER, CENTER);
-      text(nodeNumbers[i], nodePoses[i].x, nodePoses[i].y);
+      //text(nodeNumbers[i], nodePoses[i].x, nodePoses[i].y);
 
+    }
+
+    for (var i=0;i<triggers.length;i++){
+      push()
+      if (triggers[i][1] == 0){
+        fill(255, 0, 0)
+      }
+      else{
+        fill(0, 0, 255)
+      }
+      ellipse(nodePoses[triggers[i][0]].x, nodePoses[triggers[i][0]].y, 20, 20);
+      pop()
     }
 
     textAlign(RIGHT);
@@ -499,6 +527,17 @@ class Genome {
     text("angular velocity", nodePoses[2].x - 20, nodePoses[2].y);
     text("Distance to ground", nodePoses[3].x - 20, nodePoses[3].y);
     text("gradient", nodePoses[4].x - 20, nodePoses[4].y);
+
+    push()
+    textAlign(CENTER)
+    fill(0)
+    text(round(this.ins[0]), nodePoses[0].x, nodePoses[0].y);
+    text(round(this.ins[1]), nodePoses[1].x, nodePoses[1].y);
+    text(round(this.ins[2]), nodePoses[2].x, nodePoses[2].y);
+    text(round(this.ins[3]), nodePoses[3].x, nodePoses[3].y);
+    text(round(this.ins[4]), nodePoses[4].x, nodePoses[4].y);
+    pop()
+
     text("bias", nodePoses[5].x - 20, nodePoses[5].y);
     textAlign(LEFT);
     text("gas", nodePoses[nodePoses.length - 2].x + 20, nodePoses[nodePoses.length - 2].y);
