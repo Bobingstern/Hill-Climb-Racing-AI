@@ -43,12 +43,96 @@ var humanPlaying = false; //true if the user is playing
 var humanPlayer;
 
 
-var showBrain = false;
+var showBrain = true;
 var showBestEachGen = false;
 var upToGen = 0;
 var genPlayerTemp; //player
 
 var showNothing = false;
+let offset
+let easing = 0.1
+let terrain = []
+
+function getBest(){
+  var best = 0
+  var best_player = 0
+  for (var i=0;i<population.players.length;i++){
+    if (population.players[i].fitness > best && !population.players[i].dead){
+      best = population.players[i].fitness
+      best_player = i
+    }
+  }
+  return best_player
+}
+
+function makeTerrain(){
+  var terrain = []
+  var vectors = [];
+  var dirtBody;
+  var grassBody;
+
+  var distance = 20 * canvas.width;
+  var x = 0;
+  var y = 0;
+  var smoothness = 50; //a vector every
+  var grassThickness = 5;
+  var steepness = 250;
+
+  var grassPositions = [];
+  var steepnessLevel = 100; //from 0 to 200
+  var estimatedDIfficulty = 0;
+  let startingPoint = random(100000);
+
+      let totalDifference = 0;
+      for (var i = 0; i < distance; i += smoothness) {
+
+        steepnessLevel = map(i, 0, distance, 130, 250);
+        // this.steepnessLevel = map(i, 0, this.distance, 200, 200);
+
+        let flatLength = 500;
+        let noisedY = noise(startingPoint + (i - flatLength) / (700 - steepnessLevel));
+        let maxHeight = 300 + map(steepnessLevel, 0, 200, 0, 350);
+        let minHeight = 30;
+        let heightAddition = 0;
+        if (i < flatLength) {
+          noisedY = noise(startingPoint);
+          heightAddition = (flatLength - i) / 7;
+        }
+
+        vectors.push(new b2Vec2(i, canvas.height - map(noisedY, 0, 1, minHeight, maxHeight) + heightAddition));
+        if (i > 0) {
+          totalDifference += abs(vectors[vectors.length - 2].y - vectors[vectors.length - 1].y);
+        }
+
+        //add grass
+        for (var j = 0; j < 2; j++) {
+          if (random(1) < 0.05) {
+          } else {
+            if (i != 0 && grassPositions[grassPositions.length - 1] != -1 && random(1) < 0.7) {
+              grassPositions.push(floor(random(grassSprites.length)));
+              if (grassPositions[grassPositions.length - 1] == grassPositions[grassPositions.length - 2]) {
+                grassPositions[grassPositions.length - 1] = floor(random(grassSprites.length));
+              }
+            } else {
+              grassPositions.push(-1);
+            }
+          }
+        }
+
+      }
+      console.log(totalDifference);
+
+      vectors.push(new b2Vec2(distance, canvas.height + grassThickness * 2));
+      vectors.push(new b2Vec2(0, canvas.height + grassThickness * 2));
+
+      for (var vect of vectors) {
+        vect.x /= SCALE;
+        vect.y /= SCALE;
+      }
+
+      return vectors
+}
+
 
 
 function makeBox(world, bodyType, x, y, w, h, density, friction, res, mass, isSens) {
@@ -106,18 +190,75 @@ function makeCircle(world, bodyType, x, y, r, density, friction, res, mass, isSe
   return body
 }
 
+
+function makePoly(world, bodyType, vertices, x, y, density, friction, res, mass){
+  let fixDef = new b2FixtureDef();
+  fixDef.density = density;
+  fixDef.friction = friction
+  fixDef.restitution = res
+
+  // fixDef.mass = mass
+  let bodyDef = new b2BodyDef()
+  bodyDef.type = bodyType
+
+  fixDef.shape = new b2PolygonShape()
+  fixDef.shape.SetAsArray(vertices, vertices.length)
+  var filtData = new b2FilterData();
+    // filtData.groupIndex = -1;
+
+
+
+  let body = world.CreateBody(bodyDef)
+  body.CreateFixture(fixDef)
+  return body
+}
+
 //--------------------------------------------------------------------------------------------------------------------------------------------------
 
 function setup() {
   window.canvas = createCanvas(1280, 720);
   //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<replace
-  population = new Population(1);
+  offset = createVector(0, 0)
+  terrain = makeTerrain()
+  population = new Population(10);
   humanPlayer = new Player();
 }
 //--------------------------------------------------------------------------------------------------------------------------------------------------------
 function draw() {
   background(56)
+
   drawToScreen();
+  beginShape()
+  for (var i=0;i<terrain.length;i++){
+    var verts = terrain[i]
+
+    stroke(0)
+
+
+
+    vertex((verts.x), (verts.y))
+
+
+  }
+
+  push()
+  noStroke()
+  fill(255, 0, 0)
+
+  rect(population.players[getBest()].bodies[1].GetPosition().x, population.players[getBest()].bodies[1].GetPosition().y, population.players[getBest()].bodyScales[1][0]/SCALE, population.players[getBest()].bodyScales[1][1]/SCALE)
+  pop()
+  for (var i=0;i<terrain.length;i++){
+    var verts = terrain[i]
+
+    stroke(0)
+
+
+
+    vertex((verts.x*SCALE+offset.x), (verts.y*SCALE))
+
+
+  }
+  endShape()
   if (showBestEachGen) { //show the best of each gen
     showBestPlayersForEachGeneration();
   } else if (humanPlaying) { //if the user is controling the ship[
@@ -126,6 +267,14 @@ function draw() {
     showBestEverPlayer();
   } else { //if just evolving normally
     if (!population.done()) { //if any players are alive then update them
+      let targetX = population.players[getBest()].bodies[1].GetPosition().x*SCALE*-1+500;
+      let dx = targetX - offset.x;
+      offset.x += dx * easing;
+
+
+
+
+
       population.updateAlive();
     } else { //all dead
       //genetic algorithm
@@ -187,8 +336,8 @@ function drawToScreen() {
 function drawBrain() { //show the brain of whatever genome is currently showing
   var startX = 0; //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<replace
   var startY = 0;
-  var w = 0;
-  var h = 0;
+  var w = 300;
+  var h = 300;
 
   if (runBest) {
     population.bestPlayer.brain.drawGenome(startX, startY, w, h);

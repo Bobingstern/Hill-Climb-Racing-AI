@@ -490,20 +490,19 @@ class Genome {
 
     }
 
-    // print out neural network info text
-    // textAlign(RIGHT);
-    // fill(255);
-    // textSize(15);
-    // noStroke();
-    // text("car angle", nodePoses[0].x - 20, nodePoses[0].y);
-    // text("touching ground", nodePoses[1].x - 20, nodePoses[1].y);
-    // text("angular velocity", nodePoses[2].x - 20, nodePoses[2].y);
-    // text("Distance to ground", nodePoses[3].x - 20, nodePoses[3].y);
-    // text("gradient", nodePoses[4].x - 20, nodePoses[4].y);
-    // text("bias", nodePoses[5].x - 20, nodePoses[5].y);
-    // textAlign(LEFT);
-    // text("gas", nodePoses[nodePoses.length - 2].x + 20, nodePoses[nodePoses.length - 2].y);
-    // text("break", nodePoses[nodePoses.length - 1].x + 20, nodePoses[nodePoses.length - 1].y);
+    textAlign(RIGHT);
+    fill(255);
+    textSize(15);
+    noStroke();
+    text("car angle", nodePoses[0].x - 20, nodePoses[0].y);
+    text("touching ground", nodePoses[1].x - 20, nodePoses[1].y);
+    text("angular velocity", nodePoses[2].x - 20, nodePoses[2].y);
+    text("Distance to ground", nodePoses[3].x - 20, nodePoses[3].y);
+    text("gradient", nodePoses[4].x - 20, nodePoses[4].y);
+    text("bias", nodePoses[5].x - 20, nodePoses[5].y);
+    textAlign(LEFT);
+    text("gas", nodePoses[nodePoses.length - 2].x + 20, nodePoses[nodePoses.length - 2].y);
+    text("break", nodePoses[nodePoses.length - 1].x + 20, nodePoses[nodePoses.length - 1].y);
 
 
 
